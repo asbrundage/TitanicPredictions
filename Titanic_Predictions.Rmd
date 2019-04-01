@@ -1,0 +1,124 @@
+---
+title: "Titanic Predictions"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r cars}
+library(tidyverse)
+library(readr)
+library(corrr)
+library(here)
+library(tidyr)
+library(corrplot)
+library(stats)
+library(stringr)
+
+setwd("C:\\Users\\antbru\\Documents\\Science\\Kaggle\\Titanic\\Data")
+
+rawtest <- read.csv("test.csv")
+rawtrain <- read.csv("train.csv")
+rawgender <- read.csv("gender_submission.csv")
+
+gender_train <- 
+  left_join(rawtrain,rawgender,by = "PassengerId")
+
+trainnumericonly <-
+  gender_train %>%
+  select( Survived.x,Pclass,Age,SibSp,Parch,Fare)
+
+gender_test <- 
+  left_join(rawtest,rawgender,by = "PassengerId")
+
+
+```
+
+## EDA
+
+
+
+```{r pressure, echo=FALSE}
+head(rawtest,10)
+head(rawtrain,10)
+head(rawgender,10)
+
+```
+
+```{r}
+summary(gender_train)
+
+
+```
+##Correlation by Class
+
+```{r}
+#Remove string data from dataset
+trainnumericonlyfirstclass <- 
+  trainnumericonly %>%
+  # select( Survived.x,Pclass,Age,SibSp,Parch,Fare) %>%
+  filter( Pclass == 1)
+
+trainnumericonlysecondclass <- 
+  trainnumericonly %>%
+  # select( Survived.x,Pclass,Age,SibSp,Parch,Fare) %>%
+  filter( Pclass == 2)
+
+trainnumericonlythirdclass <- 
+  trainnumericonly %>%
+  # select( Survived.x,Pclass,Age,SibSp,Parch,Fare) %>%
+  filter( Pclass == 3)
+
+corrtrainmatrix2 <- cor(trainnumericonlysecondclass)
+corrtrainmatrix1 <- cor(trainnumericonlyfirstclass)
+corrtrainmatrix3 <- cor(trainnumericonlythirdclass)
+
+corrplot(corrtrainmatrix1, method = "number", is.corr = FALSE, title = 'First Class')
+corrplot(corrtrainmatrix2, method = "number", is.corr = FALSE, title = 'Second Class')
+corrplot(corrtrainmatrix3, method = "number", is.corr = FALSE, title = 'Third Class')
+
+```
+
+##Correlation by Gender
+
+```{r}
+
+
+trainnumericonlymale <- 
+  trainnumericonly %>%
+  # select( Survived.x,Pclass,Age,SibSp,Parch,Fare) %>%
+  filter( Pclass == 1)
+
+trainnumericonlyfemale <- 
+  trainnumericonly %>%
+  # select( Survived.x,Pclass,Age,SibSp,Parch,Fare) %>%
+  filter( Pclass == 2)
+
+corrtrainmatrixmale <- cor(trainnumericonlymale)
+corrtrainmatrixfemale <- cor(trainnumericonlyfemale)
+
+
+corrplot(corrtrainmatrixmale, method = "number", is.corr = FALSE, title = 'Male')
+corrplot(corrtrainmatrixfemale, method = "number", is.corr = FALSE, title = 'Female')
+
+
+```
+
+
+##Next Steps
+```{r}
+# Create dummy variables for categorical columns
+
+# library(plyr)
+gender_train$GenderDummy <- mapvalues(gender_train$Sex,from = c("female","male"),to=c("0","1"))
+gender_train$EmbarkedDummy <- mapvalues(gender_train$Embarked,from = c("S","C","Q"),to=c("1","2","3"))
+gender_train$Cabinlevel <- str_sub(gender_train$Cabin,1,1)
+gender_train$CabinDummy <- as.factor(mapvalues(gender_train$Cabinlevel, from = c("A","B","C","D","E","F","G"),to=c("1","2","3","4","5","6","7")))
+```
+
